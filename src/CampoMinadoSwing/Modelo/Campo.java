@@ -18,7 +18,7 @@ public class Campo {
 
 
 
-    public void refistrarObservadores(CampoObservador observador){
+    public void registrarObservadores(CampoObservador observador){
         observadores.add(observador);
     }
 

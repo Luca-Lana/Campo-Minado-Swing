@@ -2,14 +2,16 @@ package CampoMinadoSwing.Modelo;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
 
-public class Tabuleiro {
+public class Tabuleiro implements CampoObservador {
 
     private int linhas;
     private int colunas;
     private int minas;
 
     private final List<Campo> campos = new ArrayList<>();
+    private final List<Consumer<Boolean>> observadores = new ArrayList<>();
 
     public Tabuleiro(int linhas, int colunas, int minas) {
         this.linhas = linhas;
@@ -21,17 +23,21 @@ public class Tabuleiro {
         sortearMinas();
     }
 
-    public void abrir(int linhas , int colunas){
-        try{
-            campos.stream()
-                    .filter(c -> c.getLinha() == linhas && c.getColuna() == colunas)
-                    .findFirst()
-                    .ifPresent(Campo::abrir);
-        }catch (Exception e){ //FIXME ajustar a implementação do metodo abrir
-            campos.forEach(c -> c.setAberto(true));
-            throw e;
-        }
+    public void registrarObservador(Consumer<Boolean> observador){
+        observadores.add(observador);
     }
+
+    private void notificarObservadores(boolean resultado){
+        observadores.stream().forEach(o -> o.accept(resultado));
+    }
+
+    public void abrir(int linhas , int colunas){
+        campos.stream()
+                .filter(c -> c.getLinha() == linhas && c.getColuna() == colunas)
+                .findFirst()
+                .ifPresent(Campo::abrir);
+    }
+
      public void alternarMarcacao(int linhas , int colunas){
         campos.stream()
                 .filter(c -> c.getLinha() == linhas && c.getColuna() == colunas)
@@ -43,7 +49,9 @@ public class Tabuleiro {
     private void gerarCampos() {
         for (int l = 0; l < linhas; l++) {
             for (int c = 0; c < colunas ; c++) {
-                campos.add(new Campo(l,c));
+                Campo campo = new Campo(l,c);
+                campo.registrarObservadores(this);
+                campos.add(campo);
             }
         }
 
@@ -75,6 +83,19 @@ public class Tabuleiro {
         sortearMinas();
     }
 
+    public void eventoOcorreu(Campo campo, CampoEvento evento) {
+        if(evento == CampoEvento.EXPLODIR){
+            mostrarMinas();
+            notificarObservadores(false);
+        } else if (objetivoAlcancado()){
+            notificarObservadores(true);
+        }
+    }
 
+    private void mostrarMinas(){
+        campos.stream()
+                .filter(Campo::isMinado)
+                .forEach(c -> c.setAberto(true));
+    }
 
 }
