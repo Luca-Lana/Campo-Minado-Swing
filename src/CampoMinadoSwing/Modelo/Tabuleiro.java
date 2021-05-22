@@ -6,9 +6,9 @@ import java.util.function.Consumer;
 
 public class Tabuleiro implements CampoObservador {
 
-    private int linhas;
-    private int colunas;
-    private int minas;
+    private final int linhas;
+    private final int colunas;
+    private final int minas;
 
     private final List<Campo> campos = new ArrayList<>();
     private final List<Consumer<Boolean>> observadores = new ArrayList<>();
@@ -98,4 +98,19 @@ public class Tabuleiro implements CampoObservador {
                 .forEach(c -> c.setAberto(true));
     }
 
+    public void paraCada(Consumer<Campo> funcao){
+        campos.stream().forEach(funcao);
+    }
+
+    public int getLinhas() {
+        return linhas;
+    }
+
+    public int getColunas() {
+        return colunas;
+    }
+
+    public int getMinas() {
+        return minas;
+    }
 }
